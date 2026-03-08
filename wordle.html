@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Grid Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #wordInput {
+            padding: 10px;
+            font-size: 18px;
+            width: 200px;
+        }
+        #submitBtn {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-left: 10px;
+        }
+        #fact {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Grid Game</h1>
+    <p>Find words of 4, 5, or 6 letters from the grid and type them below. If correct, you'll get a random fact!</p>
+    <div id="grid"></div>
+    <div>
+        <input type="text" id="wordInput" placeholder="Enter word">
+        <button id="submitBtn">Submit</button>
+    </div>
+    <div id="fact"></div>
+
+    <script>
+        const gridSize = 6;
+        const grid = [];
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        // Dictionary of valid English words (4-6 letters)
+        const validWords = new Set([
+            'ABLE', 'ACID', 'AGED', 'AIDE', 'ALSO', 'AMEN', 'AMID', 'ANTE', 'ARCS', 'AREA', 'ARTS', 'BASE', 'BATH', 'BEAM', 'BEAN', 'BEAR', 'BEAT', 'BEEN', 'BELL', 'BELT', 'BEND', 'BENT', 'BEST', 'BILL', 'BIND', 'BIRD', 'BITE', 'BLOW', 'BLUE', 'BOAT', 'BODY', 'BOMB', 'BOND', 'BONE', 'BOOK', 'BOOM', 'BOOT', 'BORN', 'BOSS', 'BOTH', 'BOWL', 'BURN', 'BUSY', 'BUZZ', 'CAGE', 'CAKE', 'CALL', 'CALM', 'CAME', 'CAMP', 'CANE', 'CANT', 'CAPE', 'CARD', 'CARE', 'CART', 'CASE', 'CASH', 'CAST', 'CELL', 'CHAT', 'CHEF', 'CHOP', 'CITE', 'CITY', 'CLAM', 'CLAP', 'CLAY', 'CLIP', 'CLUB', 'COAL', 'COAT', 'CODE', 'COIL', 'COIN', 'COLD', 'COME', 'CONE', 'COOK', 'COOL', 'COPE', 'COPY', 'CORD', 'CORE', 'CORN', 'COST', 'CRAB', 'CROP', 'CROW', 'CURE', 'CURL', 'CUTE', 'DAMP', 'DARE', 'DARK', 'DATE', 'DAWN', 'DEAD', 'DEAF', 'DEAL', 'DEAR', 'DECK', 'DEEP', 'DENY', 'DESK', 'DIAL', 'DICE', 'DIET', 'DIME', 'DINE', 'DIRE', 'DIRT', 'DISK', 'DIVE', 'DOCK', 'DONE', 'DOOR', 'DOWN', 'DOZE', 'DRAG', 'DRAW', 'DREW', 'DROP', 'DRUG', 'DRUM', 'DUAL', 'DUCK', 'DULL', 'DUMP', 'DUNE', 'DUSK', 'DUST', 'DUTY', 'EACH', 'EARL', 'EARN', 'EARS', 'EASE', 'EAST', 'EASY', 'ECHO', 'EDGE', 'EDIT', 'ELSE', 'EMIT', 'ENDS', 'EPIC', 'EVEN', 'EVER', 'EVIL', 'EXAM', 'EXIT', 'FACE', 'FACT', 'FADE', 'FAIL', 'FAIR', 'FAKE', 'FALL', 'FAME', 'FARM', 'FAST', 'FATE', 'FEAR', 'FEED', 'FEEL', 'FEET', 'FELL', 'FELT', 'FERN', 'FEST', 'FILE', 'FILL', 'FILM', 'FIND', 'FINE', 'FIRE', 'FIRM', 'FISH', 'FIST', 'FIVE', 'FLAG', 'FLAT', 'FLAW', 'FLED', 'FLEE', 'FLEW', 'FLIP', 'FLOG', 'FLOW', 'FOAM', 'FOLD', 'FOLK', 'FOOD', 'FOOL', 'FOOT', 'FORD', 'FORK', 'FORM', 'FORT', 'FOUL', 'FOUR', 'FREE', 'FROG', 'FROM', 'FUEL', 'FULL', 'FUSE', 'GAIN', 'GAME', 'GANG', 'GATE', 'GAVE', 'GAZE', 'GEAR', 'GIFT', 'GIRL', 'GIVE', 'GLAD', 'GLEN', 'GLOB', 'GLOW', 'GOAL', 'GOAT', 'GOES', 'GOLD', 'GOLF', 'GONE', 'GOOD', 'GORE', 'GOWN', 'GRAB', 'GRAD', 'GRAM', 'GRAY', 'GREW', 'GREY', 'GRID', 'GRIM', 'GRIN', 'GRIP', 'GRIT', 'GROW', 'GULF', 'GUST', 'HACK', 'HAIL', 'HAIR', 'HALF', 'HALL', 'HALO', 'HALT', 'HAND', 'HANG', 'HARD', 'HARE', 'HARM', 'HARP', 'HATE', 'HAVE', 'HAWK', 'HAZE', 'HEAD', 'HEAL', 'HEAP', 'HEAR', 'HEAT', 'HECK', 'HEED', 'HEEL', 'HEIR', 'HELD', 'HELL', 'HELM', 'HELP', 'HERB', 'HERD', 'HERE', 'HERO', 'HERS', 'HIDE', 'HIGH', 'HIKE', 'HILL', 'HILT', 'HIND', 'HINT', 'HIRE', 'HISS', 'HIVE', 'HOLD', 'HOLE', 'HOLY', 'HOME', 'HOOD', 'HOOF', 'HOOK', 'HOOP', 'HOOT', 'HOPE', 'HORN', 'HOSE', 'HOST', 'HOUR', 'HOWL', 'HUGE', 'HUNG', 'HUNT', 'HURT', 'ICON', 'IDEA', 'IDLE', 'INCH', 'INTO', 'IRIS', 'IRON', 'ISLE', 'ITEM', 'JACK', 'JAIL', 'JAMS', 'JAWS', 'JAZZ', 'JELLY', 'JERK', 'JEST', 'JIGS', 'JOLT', 'JOKE', 'JOTS', 'JOYS', 'JUMP', 'JUNE', 'JUNK', 'JURY', 'JUST', 'KALE', 'KEEN', 'KEEP', 'KEPT', 'KICK', 'KILL', 'KIND', 'KING', 'KISS', 'KITE', 'KNEE', 'KNEW', 'KNOW', 'LACE', 'LACK', 'LADY', 'LAID', 'LAIR', 'LAKE', 'LAMB', 'LAME', 'LAMP', 'LAND', 'LANE', 'LARD', 'LARK', 'LAST', 'LATE', 'LAWN', 'LAZY', 'LEAD', 'LEAF', 'LEAK', 'LEAN', 'LEAP', 'LEFT', 'LEND', 'LENS', 'LENT', 'LESS', 'LIAR', 'LICE', 'LICK', 'LIED', 'LIES', 'LIFE', 'LIFT', 'LIKE', 'LIMB', 'LIME', 'LINE', 'LION', 'LIST', 'LIVE', 'LOAD', 'LOAF', 'LOAN', 'LOCK', 'LOFT', 'LONE', 'LONG', 'LOOK', 'LOOM', 'LOOP', 'LOOT', 'LOSE', 'LOSS', 'LOST', 'LOUD', 'LOVE', 'LUCK', 'LUMP', 'LUNG', 'LURE', 'LURK', 'LUST', 'LYNX', 'MADE', 'MAID', 'MAIL', 'MAIN', 'MAKE', 'MALE', 'MALL', 'MALT', 'MANE', 'MANY', 'MAPS', 'MARE', 'MARK', 'MARS', 'MASH', 'MASK', 'MATE', 'MATH', 'MEAL', 'MEAN', 'MEAT', 'MEET', 'MEMO', 'MEND', 'MENU', 'MERE', 'MESH', 'MESS', 'MICE', 'MILD', 'MILE', 'MILK', 'MILL', 'MIND', 'MINE', 'MINT', 'MISS', 'MIST', 'MODE', 'MOLD', 'MOLE', 'MOLT', 'MONK', 'MOOD', 'MOON', 'MOOR', 'MORE', 'MORN', 'MOSS', 'MOST', 'MOTH', 'MOVE', 'MUCH', 'MULE', 'MUST', 'MYTH', 'NAIL', 'NAME', 'NAPE', 'NAVY', 'NEAR', 'NEAT', 'NECK', 'NEED', 'NEST', 'NEWS', 'NEWT', 'NEXT', 'NICE', 'NICK', 'NINE', 'NODE', 'NONE', 'NOON', 'NOSE', 'NOTE', 'NOUN', 'NULL', 'NUTS', 'OATH', 'OBEY', 'ODOR', 'OMEN', 'ONCE', 'ONLY', 'ONTO', 'OOZE', 'OPAL', 'OPEN', 'ORAL', 'ORCA', 'OVEN', 'OVER', 'OWED', 'OWES', 'OWLS', 'OWNS', 'PACE', 'PACK', 'PAGE', 'PAID', 'PAIL', 'PAIN', 'PAIR', 'PALE', 'PALM', 'PANE', 'PANG', 'PANS', 'PANT', 'PARK', 'PART', 'PASS', 'PAST', 'PATH', 'PAVE', 'PAWN', 'PEAK', 'PEAR', 'PEAS', 'PEAT', 'PECK', 'PEEL', 'PEER', 'PENS', 'PENT', 'PEST', 'PETS', 'PICK', 'PIER', 'PIGS', 'PIKE', 'PILE', 'PILL', 'PINE', 'PING', 'PINK', 'PINS', 'PINT', 'PIPE', 'PLAN', 'PLAY', 'PLEA', 'PLED', 'PLOT', 'PLOW', 'PLUG', 'PLUM', 'PLUS', 'PODS', 'POEM', 'POET', 'POKE', 'POLE', 'POLL', 'POND', 'PONY', 'POOL', 'POOR', 'POPE', 'PORE', 'PORK', 'PORT', 'POSE', 'POST', 'POUR', 'PRAY', 'PREY', 'PRIM', 'PROD', 'PROM', 'PROP', 'PROW', 'PUBS', 'PUFF', 'PULL', 'PULP', 'PUMP', 'PUNK', 'PUNS', 'PURE', 'PURL', 'PURR', 'PUSH', 'PUTS', 'RACE', 'RACK', 'RAFT', 'RAGE', 'RAID', 'RAIL', 'RAIN', 'RAKE', 'RAMP', 'RANG', 'RANK', 'RAPT', 'RARE', 'RASH', 'RATE', 'RATS', 'RAVE', 'RAYS', 'RAZE', 'READ', 'REAL', 'REAM', 'REAP', 'REAR', 'REDO', 'REDS', 'REED', 'REEF', 'REEK', 'REEL', 'REIN', 'RELY', 'REND', 'RENT', 'REST', 'RICE', 'RICH', 'RIDE', 'RIFE', 'RIFT', 'RING', 'RINK', 'RIOT', 'RIPE', 'RISE', 'RISK', 'RITE', 'ROAD', 'ROAM', 'ROAN', 'ROAR', 'ROBE', 'ROCK', 'RODE', 'ROLE', 'ROLL', 'ROMP', 'ROOF', 'ROOM', 'ROOT', 'ROPE', 'ROSE', 'ROSY', 'ROTS', 'ROUT', 'ROVE', 'ROWS', 'RUBS', 'RUBY', 'RUDE', 'RUIN', 'RULE', 'RUMP', 'RUNG', 'RUNS', 'RUNT', 'RUSE', 'RUSH', 'RUST', 'SACK', 'SAFE', 'SAGE', 'SAID', 'SAIL', 'SAKE', 'SALE', 'SALT', 'SAME', 'SAND', 'SANE', 'SANG', 'SANK', 'SEAL', 'SEAM', 'SEAS', 'SEAT', 'SEED', 'SEEK', 'SEEM', 'SEEN', 'SELF', 'SELL', 'SEMI', 'SEND', 'SENT', 'SEPT', 'SETS', 'SEWN', 'SEWS', 'SHED', 'SHIN', 'SHIP', 'SHOE', 'SHOP', 'SHOT', 'SHOW', 'SHUT', 'SICK', 'SIDE', 'SIGH', 'SIGN', 'SILK', 'SILL', 'SILO', 'SILT', 'SING', 'SINK', 'SITE', 'SIZE', 'SKID', 'SKIM', 'SKIN', 'SKIP', 'SKIT', 'SLAB', 'SLAG', 'SLAM', 'SLAP', 'SLAT', 'SLAW', 'SLED', 'SLEW', 'SLID', 'SLIM', 'SLIP', 'SLIT', 'SLOB', 'SLOE', 'SLOG', 'SLOP', 'SLOT', 'SLOW', 'SLUG', 'SMOG', 'SNAG', 'SNAP', 'SNIP', 'SNIT', 'SNOB', 'SNOW', 'SNUG', 'SOAK', 'SOAP', 'SOAR', 'SOBS', 'SODA', 'SOFA', 'SOFT', 'SOIL', 'SOLD', 'SOLE', 'SOLO', 'SOME', 'SONG', 'SONS', 'SOON', 'SOOT', 'SOPS', 'SORE', 'SORT', 'SOUL', 'SOUP', 'SOUR', 'SPAN', 'SPED', 'SPIN', 'SPIT', 'SPOT', 'STAB', 'STAG', 'STAR', 'STAT', 'STAY', 'STEM', 'STEP', 'STEW', 'STIR', 'STOP', 'STOW', 'STUB', 'STUD', 'STUN', 'SUCH', 'SUIT', 'SULK', 'SUMS', 'SUNG', 'SUNK', 'SUNS', 'SUPS', 'SURE', 'SURF', 'SWAB', 'SWAG', 'SWAM', 'SWAP', 'SWAY', 'SWIM', 'SWUM', 'TABS', 'TACK', 'TACO', 'TACT', 'TAIL', 'TAKE', 'TALE', 'TALK', 'TALL', 'TAME', 'TAMP', 'TANS', 'TAPE', 'TAPS', 'TARE', 'TARN', 'TARP', 'TART', 'TASK', 'TAUT', 'TAXI', 'TEAK', 'TEAL', 'TEAM', 'TEAR', 'TEAS', 'TEAT', 'TEEM', 'TEEN', 'TEES', 'TELL', 'TEMP', 'TEND', 'TENS', 'TENT', 'TERM', 'TERN', 'TEST', 'TEXT', 'THAN', 'THAT', 'THAW', 'THEE', 'THEM', 'THEN', 'THEY', 'THIN', 'THIS', 'THOU', 'THUD', 'THUS', 'TICK', 'TIDE', 'TIDY', 'TIED', 'TIER', 'TIES', 'TIFF', 'TILE', 'TILL', 'TILT', 'TIME', 'TINE', 'TINS', 'TINY', 'TIPS', 'TIRE', 'TOAD', 'TOES', 'TOFU', 'TOGS', 'TOIL', 'TOLD', 'TOLL', 'TOMB', 'TOME', 'TONE', 'TONG', 'TONS', 'TOOK', 'TOOL', 'TOOT', 'TOPS', 'TORE', 'TORN', 'TORT', 'TOSS', 'TOTE', 'TOTS', 'TOUR', 'TOUT', 'TOWN', 'TOYS', 'TRAP', 'TRAY', 'TREE', 'TREK', 'TREY', 'TRIM', 'TRIO', 'TRIP', 'TROD', 'TROT', 'TRUE', 'TUBS', 'TUCK', 'TUFT', 'TUGS', 'TUNA', 'TUNE', 'TURF', 'TURN', 'TUSK', 'TUTU', 'TWIG', 'TWIN', 'TWIT', 'TYPE', 'UGLY', 'UNDO', 'UNIT', 'UPON', 'URGE', 'URNS', 'USED', 'USER', 'USES', 'VAIN', 'VALE', 'VAMP', 'VANE', 'VANS', 'VARY', 'VASE', 'VAST', 'VATS', 'VEAL', 'VEER', 'VEIL', 'VEIN', 'VEND', 'VENT', 'VERB', 'VERY', 'VEST', 'VETO', 'VETS', 'VICE', 'TIED', 'VIEW', 'VILE', 'VINE', 'VINO', 'VIOL', 'VOID', 'VOTE', 'VOWS', 'WADE', 'WADS', 'WAFT', 'WAGE', 'WAGS', 'WAIL', 'WAIT', 'WAKE', 'WALK', 'WALL', 'WAND', 'WANE', 'WANT', 'WARE', 'WARM', 'WARN', 'WARP', 'WARS', 'WART', 'WARY', 'WASH', 'WASP', 'WAVE', 'WAVY', 'WAXY', 'WAYS', 'WEAK', 'WEAL', 'WEAN', 'WEAR', 'WEBS', 'WEDS', 'WEED', 'WEEK', 'WEEP', 'WEIR', 'WELD', 'WELL', 'WELT', 'WENT', 'WEPT', 'WERE', 'WEST', 'WETS', 'WHAT', 'WHEN', 'WHET', 'WHEY', 'WHICH', 'WHILE', 'WHIM', 'WHIP', 'WHIT', 'WHIZ', 'WHOM', 'WHOOP', 'WICKED', 'WIDE', 'WIFE', 'WIGS', 'WILD', 'WILE', 'WILL', 'WILT', 'WILY', 'WIND', 'WINE', 'WING', 'WINK', 'WINS', 'WIPE', 'WIRE', 'WIRY', 'WISE', 'WISH', 'WITH', 'WITS', 'WIVES', 'WOKE', 'WOLD', 'WOLF', 'WOMB', 'WONT', 'WOOD', 'WOOF', 'WOOL', 'WORD', 'WORE', 'WORK', 'WORM', 'WORN', 'WORT', 'WOVE', 'WOWS', 'WRAP', 'WRIT', 'YAKS', 'YAMS', 'YANG', 'YANK', 'YARD', 'YARN', 'YAWN', 'YEAH', 'YEAR', 'YEAS', 'YELL', 'YELP', 'YENS', 'YEPS', 'YEWS', 'YIELD', 'YOKE', 'YOLK', 'YORE', 'YOUR', 'YOUTH', 'YOWL', 'YUCK', 'YULE', 'ZEAL', 'ZEST', 'ZINC', 'ZING', 'ZONE', 'ZOOM'
+        ]);
+
+        // Nature facts
+        const natureFacts = [
+            "The largest tree in the world is a giant sequoia named General Sherman, located in California's Sequoia National Park.",
+            "Octopuses have three hearts and blue blood.",
+            "A group of flamingos is called a 'flamboyance'.",
+            "The shortest war in history lasted only 38-45 minutes between Britain and Zanzibar in 1896.",
+            "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible."
+        ];
+
+        // History facts
+        const historyFacts = [
+            "The shortest war in history lasted only 38-45 minutes between Britain and Zanzibar in 1896.",
+            "Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid of Giza.",
+            "The Great Wall of China is not visible from space with the naked eye, despite popular belief.",
+            "Albert Einstein was offered the presidency of Israel in 1952 but declined.",
+            "The first computer programmer was Ada Lovelace, who worked with Charles Babbage in the 1840s."
+        ];
+
+        // Geography facts
+        const geographyFacts = [
+            "Russia spans 11 time zones.",
+            "The Sahara Desert is larger than the entire United States.",
+            "There are 195 countries in the world.",
+            "Mount Everest grows about 4 millimeters taller each year due to tectonic activity.",
+            "The longest river in the world is the Nile River, stretching over 6,650 kilometers."
+        ];
+
+        const allFacts = [...natureFacts, ...historyFacts, ...geographyFacts];
+
+        // Generate random grid
+        function generateGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            grid.length = 0;
+            for (let i = 0; i < gridSize; i++) {
+                grid[i] = [];
+                for (let j = 0; j < gridSize; j++) {
+                    const letter = letters[Math.floor(Math.random() * letters.length)];
+                    grid[i][j] = letter;
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = letter;
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        // Check if word exists in grid (adjacent letters, no reuse) and is a valid English word
+        function isWordInGrid(word) {
+            const wordUpper = word.toUpperCase();
+            if (wordUpper.length < 4 || wordUpper.length > 6) return false;
+            if (!validWords.has(wordUpper)) return false;
+
+            // Directions: up, down, left, right, diagonals
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+
+            function dfs(row, col, index, visited) {
+                if (index === wordUpper.length) return true;
+                if (row < 0 || row >= gridSize || col < 0 || col >= gridSize || visited[row][col] || grid[row][col] !== wordUpper[index]) return false;
+
+                visited[row][col] = true;
+                for (const [dr, dc] of directions) {
+                    if (dfs(row + dr, col + dc, index + 1, visited)) return true;
+                }
+                visited[row][col] = false;
+                return false;
+            }
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === wordUpper[0]) {
+                        const visited = Array.from({length: gridSize}, () => Array(gridSize).fill(false));
+                        if (dfs(i, j, 0, visited)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Get random fact
+        function getRandomFact() {
+            return allFacts[Math.floor(Math.random() * allFacts.length)];
+        }
+
+        // Event listener
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const word = document.getElementById('wordInput').value.trim();
+            const factDiv = document.getElementById('fact');
+            if (isWordInGrid(word)) {
+                factDiv.textContent = getRandomFact();
+            } else {
+                factDiv.textContent = "Word not found in the grid, not a valid English word, or invalid length. Try again!";
+            }
+            document.getElementById('wordInput').value = '';
+        });
+
+        // Initialize
+        generateGrid();
+    </script>
+</body>
+</html> 
